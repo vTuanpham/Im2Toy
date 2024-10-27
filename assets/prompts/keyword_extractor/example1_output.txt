@@ -1,0 +1,11 @@
+JSON Output:
+{
+  "short_reasoning": "A traditional wooden structure stands in a pine forest setting. The photographer has positioned the cabin centrally, with the stone chimney and shingled roof clearly visible. Natural lighting emphasizes the cabin's weathered logs and architectural features, making it the dominant subject in the frame.",
+  "main_objects": [
+    "wooden cabin",
+    "forest shelter",
+    "pine cabin",
+    "timber lodge",
+    "woodland retreat"
+  ]
+}

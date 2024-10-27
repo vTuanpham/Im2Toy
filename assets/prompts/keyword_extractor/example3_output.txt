@@ -1,0 +1,11 @@
+JSON Output:
+{
+  "short_reasoning": "A majestic white lighthouse dominates the frame, set against a moody, clouded sky. The structure's imposing height and classic design are emphasized by the vertical composition, while seabirds in flight add movement to the scene. The small red building at its base and the dramatic cliff setting create a quintessential maritime scene, with the lighthouse serving as the primary subject.",
+  "main_objects": [
+    "watchtower",
+    "sea lighthouse",
+    "marine beacon",
+    "coastal tower",
+    "guide light"
+  ]
+}

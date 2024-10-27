@@ -1,0 +1,1 @@
+Analyze the image and extract the main objects that the photographer is focusing on. Ignore minor background elements and irrelevant details. Return the key objects in the image as a list of keywords in JSON format.

@@ -1,0 +1,1 @@
+Your Task: Analyze the following image, identify the **main objects** that are the focus of the composition and ignore the background elements. Give a short thought on the image and list as much keywords and their corresonding synonyms, make the keyword as generalize as possible, and output them in the same JSON format.

@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+numpy
+Pillow
+ultralytics
+google-generativeai
+PyYAML
+python-multipart
+httpx
+fuzzywuzzy[speedup]

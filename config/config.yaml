@@ -1,0 +1,29 @@
+api:
+  title: "Toy Transformer API"
+  version: "1.0.0"
+  description: "Transform real images into toy-like characters"
+  host: "0.0.0.0"
+  port: 8000
+
+models:
+  gemini:
+    model_name: "gemini-1.5-flash-latest"
+    api_key_env: "GOOGLE_API_KEY"
+
+  yolo:
+    model_path: "yolov8x-worldv2.pt"
+    weighted_score_threshold: 0.85
+    weight_confidence: 0.3
+    weight_area: 0.15
+    weight_center_proximity: 0.9
+
+  sam:
+    model_path: "sam2.1_s.pt"
+
+image_generation:
+  provider: "pollinations"
+  base_url: "https://image.pollinations.ai/prompt/"
+
+storage:
+  temp_dir: "/tmp/toy-transformer"
+  output_dir: "outputs"

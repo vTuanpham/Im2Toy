@@ -1,0 +1,1 @@
+Try your best to provide valid reasoning and extract the main keyword that is the main object of that image. \nExample 1 input image:

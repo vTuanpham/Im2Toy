@@ -1,0 +1,11 @@
+JSON Output:
+{
+  "short_reasoning": "A red urban commuter bicycle is positioned prominently in the frame, set against a serene park backdrop. The photographer has captured the bicycle's sleek frame and mechanical details while using the natural park setting with its impressive tree canopy to create depth. The red color of the bike makes it stand out as the clear focal point of the composition.",
+  "main_objects": [
+    "city bike",
+    "commuter bicycle",
+    "red bike",
+    "urban bicycle",
+    "street bike"
+  ]
+}
