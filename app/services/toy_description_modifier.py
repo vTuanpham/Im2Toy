@@ -16,8 +16,8 @@ class ToyDescriptionModifier(BaseService):
             config,
             prompt_manager,
             prompt_type="toy_desc_modifier",
-            max_concurrency=2,
-            max_total_tasks=2,
+            max_concurrency=4,
+            max_total_tasks=4,
         )
         self.model = genai.GenerativeModel(
             config["model_name"],

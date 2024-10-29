@@ -146,7 +146,7 @@ class ImageProcessor:
             try:
                 # Modify description for toy
                 toy_description = await self.toy_description_modifier(
-                    Image.open(seg_path), description
+                    Image.open(temp_path), description
                 )
                 logger.log(logging.INFO, f"Modified toy description: {toy_description}")
             except Exception as e:
