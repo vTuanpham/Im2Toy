@@ -34,7 +34,7 @@ class ObjectDetector:
         logger.log(logging.INFO, f"Setting classes: {classes}")
 
         results = self.model.predict(image)
-        logger.log(logging.INFO, f"Results: {results}")
+        logger.log(logging.DEBUG, f"Results: {results}")
 
         return self._process_results(results, input_classes=classes, image=image)
 
@@ -51,7 +51,7 @@ class ObjectDetector:
                 confs.append(box.conf.item())
 
         if not boxes_xywh:
-            logger.log(logging.INFO, "No objects detected")
+            logger.log(logging.ERROR, "No objects detected")
             return {
                 "boxes_xywh": [],
                 "boxes_xyxy": [],
@@ -68,7 +68,7 @@ class ObjectDetector:
 
         # Get the box with the highest combined score
         best_box_index = np.argmax(normalized_combined_score)
-        logger.log(logging.INFO, f"Best box index: {best_box_index}")
+        logger.log(logging.DEBUG, f"Best box index: {best_box_index}")
 
         # # Extract the box with the highest combined score
         highest_score_box_xywh = boxes_xywh[best_box_index]

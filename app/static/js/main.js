@@ -5,10 +5,18 @@ class ImageTransformer {
     this.context = this.canvas?.getContext("2d");
     this.currentStream = null;
     this.fileInput = document.getElementById("fileInput");
+    this.inputImage = document.getElementById("inputImage");
     this.resultImage = document.getElementById("resultImage");
     this.description = document.getElementById("description");
+    this.toy_description = document.getElementById("toy_description");
+    this.main_object = document.getElementById("main_object");
+    this.detected_objects = document.getElementById("detected_objects");
     this.error = document.getElementById("error");
-    this.loadingOverlay = document.getElementById("loadingOverlay");
+
+    if (!this.canvas || !this.context) {
+      console.error("Required elements not found");
+      return;
+    }
 
     this.initializeEventListeners();
   }
@@ -21,7 +29,69 @@ class ImageTransformer {
     });
   }
 
+  showLoading() {
+    const overlay = document.getElementById("loadingOverlay");
+    const spinner = document.getElementById("loadingSpinner");
+    const checkmark = document.getElementById("successCheckmark");
+    const progressBar = document.getElementById("progressBar");
+
+    overlay.style.display = "flex";
+    spinner.style.display = "block";
+    checkmark.style.display = "none";
+    progressBar.style.width = "0%";
+
+    const phases = [
+      "Initializing...",
+      "Analyzing image...",
+      "Applying transformations...",
+      "Generating result...",
+    ];
+
+    let currentPhase = 0;
+    const phaseElement = document.getElementById("loadingPhase");
+
+    const phaseInterval = setInterval(() => {
+      if (currentPhase < phases.length) {
+        phaseElement.textContent = phases[currentPhase];
+        const progress = (currentPhase + 1) * (100 / phases.length);
+        progressBar.style.width = `${progress}%`;
+        currentPhase++;
+      } else {
+        clearInterval(phaseInterval);
+      }
+    }, 1000);
+
+    return phaseInterval;
+  }
+
+  hideLoading(phaseInterval, success = true) {
+    const overlay = document.getElementById("loadingOverlay");
+    const spinner = document.getElementById("loadingSpinner");
+    const checkmark = document.getElementById("successCheckmark");
+    const progressBar = document.getElementById("progressBar");
+
+    clearInterval(phaseInterval);
+
+    if (success) {
+      spinner.style.display = "none";
+      checkmark.style.display = "block";
+      progressBar.style.width = "100%";
+      document.getElementById("loadingPhase").textContent = "Complete!";
+
+      setTimeout(() => {
+        overlay.style.display = "none";
+      }, 1000);
+    } else {
+      overlay.style.display = "none";
+    }
+  }
+
   async startCamera(facingMode = "user") {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this.showError("Camera access is not supported in this browser");
+      return;
+    }
+
     try {
       this.stopCamera();
 
@@ -79,7 +149,18 @@ class ImageTransformer {
       async (blob) => {
         const formData = new FormData();
         formData.append("file", blob, "capture.jpg");
-        await this.uploadImage(formData);
+
+        // Create a DataTransfer object to set the files property
+        const dataTransfer = new DataTransfer();
+        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+        dataTransfer.items.add(file);
+
+        // Assign the DataTransfer's files to the file input
+        this.fileInput.files = dataTransfer.files;
+
+        // Dispatch change event to trigger the event listener
+        const event = new Event("change", { bubbles: true });
+        this.fileInput.dispatchEvent(event);
       },
       "image/jpeg",
       0.9,
@@ -100,8 +181,10 @@ class ImageTransformer {
     // Preview image
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.resultImage.src = e.target.result;
-      this.resultImage.classList.remove("hidden");
+      // this.resultImage.src = e.target.result;
+      // this.resultImage.classList.remove("hidden");
+      this.inputImage.src = e.target.result;
+      this.inputImage.classList.remove("hidden");
     };
     reader.readAsDataURL(file);
 
@@ -126,7 +209,7 @@ class ImageTransformer {
   }
 
   async uploadImage(formData) {
-    this.loadingOverlay.style.display = "flex";
+    const phaseInterval = this.showLoading();
     this.error.textContent = "";
 
     try {
@@ -144,16 +227,25 @@ class ImageTransformer {
       if (result.success) {
         this.resultImage.src = "data:image/jpeg;base64," + result.image_bytes;
         this.resultImage.classList.remove("hidden");
+
         this.description.textContent = result.description;
+        this.toy_description.textContent = result.toy_description;
+        this.main_object.textContent = "Main object: " + result.main_object;
+
+        // Convert list of detected objects to a string
+        const detected_objects = result.detected_objects.join(", ");
+        this.detected_objects.textContent =
+          "Detected objects: " + detected_objects;
+
         this.resultImage.scrollIntoView({ behavior: "smooth" });
         this.showToast("Image transformed successfully!");
+        this.hideLoading(phaseInterval, true);
       } else {
         throw new Error(result.error || "Unknown error occurred");
       }
     } catch (err) {
       this.showError(`Error: ${err.message}`);
-    } finally {
-      this.loadingOverlay.style.display = "none";
+      this.hideLoading(phaseInterval, false);
     }
   }
 
@@ -183,6 +275,10 @@ class ImageTransformer {
 // Initialize the application
 document.addEventListener("DOMContentLoaded", () => {
   window.imageTransformer = new ImageTransformer();
+  // Cleanup on page unload
+  window.addEventListener("beforeunload", () => {
+    window.imageTransformer.stopCamera();
+  });
 });
 
 // Expose methods for HTML onclick handlers

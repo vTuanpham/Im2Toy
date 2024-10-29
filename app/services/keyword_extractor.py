@@ -83,7 +83,7 @@ class KeywordExtractor(BaseService):
                 if key == "main_objects":
                     final_result[key].extend(value)
 
-        logger.log(logging.INFO, f"Final result before fuzzy matching: {final_result}")
+        logger.log(logging.DEBUG, f"Final result before fuzzy matching: {final_result}")
 
         if len(final_result["main_objects"]) == 0:
             logger.log(logging.ERROR, "No main objects detected")
@@ -96,7 +96,7 @@ class KeywordExtractor(BaseService):
                 final_result["main_objects"]
             )
             if len(final_result_filtered["main_objects"]) == 0:
-                logger.log(logging.INFO, "No main objects detected")
+                logger.log(logging.ERROR, "No main objects detected")
                 logger.log(logging.INFO, "Fall back to the original result")
                 final_result_filtered["main_objects"] = final_result["main_objects"]
                 final_result["main_objects"] = final_result_filtered["main_objects"]
@@ -104,7 +104,7 @@ class KeywordExtractor(BaseService):
         logger.log(logging.INFO, f"Final result: {final_result}")
         return final_result
 
-    def _get_frequent_matched_items(self, items, threshold=70, min_frequency=3):
+    def _get_frequent_matched_items(self, items, threshold=50, min_frequency=2):
         """
         Returns a list of unique items that highly match with others in the original list,
         filtering out items that appear infrequently.

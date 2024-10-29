@@ -42,6 +42,11 @@ class ImageProcessor:
 
         self.image_generator = ImageGenerator(config.get_image_generation_config())
 
+        self.max_output_storage = config.get_storage_config().get(
+            "max_output_storage", 30
+        )
+        self.output_dir = Path(config.get_storage_config()["output_dir"])
+
         logger.log(logging.INFO, "ImageProcessor initialized")
 
     async def process_image(self, file: UploadFile) -> Dict[str, Any]:
@@ -49,7 +54,7 @@ class ImageProcessor:
 
         # Create temporary directory for processing
         with tempfile.TemporaryDirectory() as temp_dir:
-            logger.log(logging.INFO, f"Temporary directory created: {temp_dir}")
+            logger.log(logging.DEBUG, f"Temporary directory created: {temp_dir}")
 
             # Save uploaded file
             temp_path = Path(temp_dir) / "input.jpg"
@@ -60,7 +65,7 @@ class ImageProcessor:
             if fsize == 0:
                 logger.log(logging.ERROR, f"Uploaded file {temp_path} is empty")
                 raise Exception("Uploaded file is empty")
-            logger.log(logging.INFO, f"File saved size: {fsize}")
+            logger.log(logging.DEBUG, f"File saved size: {fsize}")
 
             # Process image through pipeline
             try:
@@ -96,6 +101,8 @@ class ImageProcessor:
                 logger.log(logging.INFO, f"Object detected: {main_class}")
                 logger.log(logging.INFO, f"Classes detected: {classes_detected}")
                 logger.log(logging.INFO, f"Highest score box: {highest_score_box_xyxy}")
+                logger.log(logging.DEBUG, f"Boxes detected: {boxes_xyxy}")
+                logger.log(logging.DEBUG, f"Boxes detected: {boxes_xywh}")
             except Exception as e:
                 logger.log(logging.ERROR, f"Error detecting objects: {e}")
                 raise e
@@ -105,7 +112,8 @@ class ImageProcessor:
                 segmentation_result = self.segmentation.segment_object(
                     image, box_xyxy=highest_score_box_xyxy
                 )
-                logger.log(logging.INFO, f"Object segmented {segmentation_result}")
+                logger.log(logging.INFO, f"Object {image} segmented")
+                logger.log(logging.DEBUG, f"Object segmented {segmentation_result}")
 
                 if segmentation_result is None:
                     raise Exception("Error segmenting object")
@@ -118,15 +126,15 @@ class ImageProcessor:
 
                 # Save segmented image
                 seg_path = Path(temp_dir) / "segmented.png"
-                logger.log(logging.INFO, f"Saving segmented image: {seg_path}")
+                logger.log(logging.DEBUG, f"Saving segmented image: {seg_path}")
                 segmented_image.save(seg_path)
-                logger.log(logging.INFO, f"Segmented image saved: {seg_path}")
+                logger.log(logging.DEBUG, f"Segmented image saved: {seg_path}")
 
                 # Save box crop
                 box_crop_path = Path(temp_dir) / "box_crop.png"
-                logger.log(logging.INFO, f"Saving box crop: {box_crop_path}")
+                logger.log(logging.DEBUG, f"Saving box crop: {box_crop_path}")
                 segmented_image_box_crop.save(box_crop_path)
-                logger.log(logging.INFO, f"Box crop saved: {box_crop_path}")
+                logger.log(logging.DEBUG, f"Box crop saved: {box_crop_path}")
             except Exception as e:
                 logger.log(logging.ERROR, f"Error segmenting object: {e}")
                 raise e
@@ -153,11 +161,19 @@ class ImageProcessor:
                 logger.log(logging.ERROR, f"Error modifying description: {e}")
                 raise e
 
+            # Check how many files are in the output directory and delete the oldest one if there are more than 30
+            files = list(self.output_dir.iterdir())
+            if len(files) > self.max_output_storage:
+                oldest_file = min(files, key=lambda p: p.stat().st_ctime)
+                logger.log(logging.INFO, f"Deleting oldest file: {oldest_file}")
+                oldest_file.unlink()
+
             # Generate final image
-            output_path = (
-                Path(self.config.get_storage_config()["output_dir"])
-                / f"{os.path.basename(file.filename).split('.')[0]}_toy.jpg"
-            )
+            # output_path = (
+            #     self.output_dir
+            #     / f"{os.path.basename(file.filename).split('.')[0]}_toy.jpg"
+            # )
+            output_path = self.output_dir / os.path.basename(file.filename)
             image_bytes, image_url = self.image_generator.generate_image(
                 toy_description, str(output_path)
             )
@@ -167,4 +183,7 @@ class ImageProcessor:
                 "image_url": image_url,
                 "description": description,
                 "image_bytes": image_bytes,
+                "toy_description": toy_description,
+                "main_object": main_class,
+                "detected_objects": classes_detected,
             }

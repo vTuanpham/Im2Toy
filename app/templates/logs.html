@@ -1,39 +1,27 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} 
+{% block content %}
 <div class="container mx-auto">
   <div class="bg-white rounded-lg shadow-lg p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Application Logs</h1>
       <div class="flex gap-4">
-        <select
-          id="logLevel"
-          onchange="filterLogs()"
-          class="rounded border p-2"
-        >
-          <option value="ALL" {% if level="" ="ALL" %}selected{% endif %}>
+        <select id="logLevel" onchange="filterLogs()" class="rounded border p-2">
+          <option value="ALL" {% if level == "ALL" %}selected{% endif %}>
             All Levels
           </option>
-          <option value="INFO" {% if level="" ="INFO" %}selected{% endif %}>
+          <option value="INFO" {% if level == "INFO" %}selected{% endif %}>
             Info
           </option>
-          <option
-            value="WARNING"
-            {%
-            if
-            level=""
-            ="WARNING"
-            %}selected{%
-            endif
-            %}
-          >
+          <option value="WARNING" {% if level == "WARNING" %}selected{% endif %}>
             Warning
           </option>
-          <option value="ERROR" {% if level="" ="ERROR" %}selected{% endif %}>
+          <option value="ERROR" {% if level == "ERROR" %}selected{% endif %}>
             Error
           </option>
         </select>
         <button
           onclick="refreshLogs()"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
         >
           Refresh
         </button>
@@ -41,7 +29,8 @@
     </div>
 
     <div class="space-y-2">
-      {% for log in logs %} {% if 'ERROR' in log %}
+      {% for log in logs %}
+      {% if 'ERROR' in log %}
       <div class="p-3 bg-red-50 text-red-700 rounded">{{ log }}</div>
       {% elif 'WARNING' in log %}
       <div class="p-3 bg-yellow-50 text-yellow-700 rounded">{{ log }}</div>
@@ -49,37 +38,40 @@
       <div class="p-3 bg-green-50 text-green-700 rounded">{{ log }}</div>
       {% else %}
       <div class="p-3 bg-gray-50 text-gray-700 rounded">{{ log }}</div>
-      {% endif %} {% endfor %}
+      {% endif %}
+      {% endfor %}
     </div>
 
     {% if total_pages > 1 %}
-    <div class="mt-6 flex justify-center space-x-2">
-      {% if current_page > 1 %}
-      <a
-        href="?page={{ current_page - 1 }}&level={{ level }}"
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Previous
-      </a>
-      {% endif %}
+<div class="mt-6 flex justify-center space-x-2">
+  {% if current_page > 1 %}
+    <a
+      href="?page={{ current_page - 1 }}&level={{ level }}"
+      class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+    >
+      Previous
+    </a>
+  {% endif %}
 
-      <span class="py-2 px-4">
-        Page {{ current_page }} of {{ total_pages }}
-      </span>
+  <span class="py-2 px-4">
+    Page {{ current_page }} of {{ total_pages }}
+  </span>
 
-      {% if current_page < total_pages %}
-      <a
-        href="?page={{ current_page + 1 }}&level={{ level }}"
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Next
-      </a>
-      {% endif %}
-    </div>
-    {% endif %}
+  {% if current_page < total_pages %}
+    <a
+      href="?page={{ current_page + 1 }}&level={{ level }}"
+      class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+    >
+      Next
+    </a>
+  {% endif %}
+</div>
+{% endif %}
   </div>
 </div>
-{% endblock %} {% block scripts %}
+{% endblock %} 
+
+{% block scripts %}
 <script>
   function filterLogs() {
     const level = document.getElementById("logLevel").value;
@@ -97,3 +89,4 @@
   setInterval(refreshLogs, 30000);
 </script>
 {% endblock %}
+

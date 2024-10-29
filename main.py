@@ -25,13 +25,6 @@ app.mount(
     name="static",
 )
 
-# Mount templates directory for HTML templates
-app.mount(
-    "/templates",
-    StaticFiles(directory=Path(__file__).parent / "app" / "templates"),
-    name="templates",
-)
-
 # Include routes from routes.py
 image_transform = ImageTransformRouter()
 app.include_router(image_transform.router)
@@ -39,5 +32,7 @@ app.include_router(image_transform.router)
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(f"{Path(__file__).stem}:app", host="0.0.0.0", port=8000, reload=True)
+    host = config.get_api_config()["host"]
+    port = config.get_api_config()["port"]
 
+    uvicorn.run(f"{Path(__file__).stem}:app", host=host, port=port, reload=True)

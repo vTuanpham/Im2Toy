@@ -24,12 +24,12 @@ prompts:
         content: "test_2"
       - type: "text"
         content: "prompts/keyword_extractor/example2_output.txt"
-      # - type: "text"
-      #   content: "prompts/keyword_extractor/example3_input.txt"
-      # - type: "image"
-      #   content: "test_3"
-      # - type: "text"
-      #   content: "prompts/keyword_extractor/example3_output.txt"
+      - type: "text"
+        content: "prompts/keyword_extractor/example3_input.txt"
+      - type: "image"
+        content: "test_3"
+      - type: "text"
+        content: "prompts/keyword_extractor/example3_output.txt"
 
   image_descriptor:
     system_prompt: "prompts/image_descriptor/system.txt"

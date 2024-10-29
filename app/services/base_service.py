@@ -41,7 +41,7 @@ class BaseService(ABC):
         Retrieves a prompt sequence for the given prompt type, excluding specified keys.
         """
 
-        logger.log(logging.INFO, f"Getting prompt sequence: {prompt_type}")
+        logger.log(logging.DEBUG, f"Getting prompt sequence: {prompt_type}")
 
         if prompt_type:
             return self.prompt_manager.get_prompt_sequence(prompt_type, exclude_keys)
@@ -52,7 +52,7 @@ class BaseService(ABC):
         Retrieves a specific prompt key for the given prompt type.
         """
 
-        logger.log(logging.INFO, f"Getting prompt key: {prompt_key}")
+        logger.log(logging.DEBUG, f"Getting prompt key: {prompt_key}")
 
         if prompt_type:
             return self.prompt_manager.get_prompt_key(prompt_type, prompt_key)
@@ -121,7 +121,7 @@ class BaseService(ABC):
 
         self.completed_tasks = 0
         logger.log(
-            logging.INFO, f"Setting completed tasks back to {self.completed_tasks}"
+            logging.DEBUG, f"Setting completed tasks back to {self.completed_tasks}"
         )
 
         return self.process_results(results)

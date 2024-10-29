@@ -31,20 +31,24 @@
     <!-- Navigation -->
     <nav class="bg-white shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
-        <div class="flex justify-between h-16">
-          <div class="flex">
-            <a href="/" class="flex items-center">
-              <img
-                src="{{ url_for('static', path='images/logo.png') }}"
-                alt="Logo"
-                class="h-8 w-8 mr-2"
-              />
-              <span class="text-xl font-bold">Image Transformer</span>
-            </a>
-          </div>
+        <div class="flex justify-between h-16 items-center">
+          <a
+            href="/"
+            class="flex items-center text-gray-800 hover:text-gray-900"
+          >
+            <img
+              src="{{ url_for('static', path='images/logo.png') }}"
+              alt="Logo"
+              class="h-8 w-8 mr-2"
+            />
+            <span class="text-xl font-bold">Image Transformer</span>
+          </a>
           <div class="flex items-center space-x-4">
-            <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
-            <a href="/logs" class="text-gray-600 hover:text-gray-900">Logs</a>
+            <a href="/" class="text-gray-600 hover:text-gray-800">Home</a>
+            <a href="/logs" class="text-gray-600 hover:text-gray-800">Logs</a>
+            <a href="/gallery" class="text-gray-600 hover:text-gray-800"
+              >Gallery</a
+            >
           </div>
         </div>
       </div>

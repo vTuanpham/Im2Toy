@@ -41,6 +41,7 @@ class ToyDescriptionModifier(BaseService):
         return response.text
 
     def process_results(self, results: List[str]) -> str:
+        logger.log(logging.DEBUG, f"Processing results: {results}")
         longest_toy_description = max(results, key=len)
-        logger.log(logging.INFO, f"Longest toy description: {longest_toy_description}")
+        logger.log(logging.DEBUG, f"Longest toy description: {longest_toy_description}")
         return longest_toy_description
