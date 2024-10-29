@@ -7,6 +7,9 @@ from PIL import Image
 from ultralytics import SAM
 
 
+logger = logging.getLogger("toy_transformer")
+
+
 class SegmentationResult(TypedDict):
     binary_mask: npt.NDArray
     isolated_object: Image.Image
@@ -20,27 +23,27 @@ class Segmentation:
     def segment_object(
         self, image: Image.Image, box_xyxy: npt.NDArray
     ) -> SegmentationResult:
-        logging.log(logging.INFO, f"Segmenting object with box {box_xyxy}.")
+        logger.log(logging.INFO, f"Segmenting object with box {box_xyxy}.")
 
         box_array = np.asarray(box_xyxy).reshape(-1, 4)
-        logging.log(logging.INFO, f"Box array shape: {box_array.shape}")
+        logger.log(logging.INFO, f"Box array shape: {box_array.shape}")
         image_np = np.array(image)
 
         results = self.sam_model(image_np, bboxes=box_array, device="cpu")
-        logging.log(logging.INFO, f"Results: {results}")
+        logger.log(logging.INFO, f"Results: {results}")
         binary_mask = results[0].masks.data.cpu().numpy().squeeze()
-        logging.log(logging.INFO, f"Binary mask shape: {binary_mask.shape}")
+        logger.log(logging.INFO, f"Binary mask shape: {binary_mask.shape}")
 
         return self._process_segmentation(image_np, binary_mask, box_xyxy)
 
     def _process_segmentation(
         self, image: npt.NDArray, binary_mask: npt.NDArray, box_xyxy: npt.NDArray
     ) -> SegmentationResult:
-        logging.log(logging.INFO, "Processing segmentation results")
+        logger.log(logging.INFO, "Processing segmentation results")
 
         binary_mask_rgb = np.repeat(binary_mask[:, :, np.newaxis], 3, axis=2)
 
-        logging.log(logging.INFO, f"Binary mask RGB shape: {binary_mask_rgb.shape}")
+        logger.log(logging.INFO, f"Binary mask RGB shape: {binary_mask_rgb.shape}")
         white_background = np.ones_like(image) * 255
         isolated_object = np.where(binary_mask_rgb, image, white_background)
 

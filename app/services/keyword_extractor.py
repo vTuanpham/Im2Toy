@@ -1,5 +1,5 @@
+import logging
 from typing import Dict, List
-from google.generativeai.files import logging
 from typing_extensions import TypedDict
 import google.generativeai as genai
 from PIL import Image
@@ -7,6 +7,9 @@ from fuzzywuzzy import fuzz
 from collections import Counter
 from .base_service import BaseService
 from ..core.prompt_manager import PromptManager, PromptSequenceItem
+
+
+logger = logging.getLogger("toy_transformer")
 
 
 class KeywordResponse(TypedDict):
@@ -55,7 +58,7 @@ class KeywordExtractor(BaseService):
         # Join all the results to their corresponding keys if they contain the "main_objects" key
         final_result = KeywordResponse(reasoning="", main_objects=[])
 
-        logging.log(logging.INFO, f"Processing results: {results}")
+        logger.log(logging.INFO, f"Processing results: {results}")
 
         for result_str in results:
             try:
@@ -71,7 +74,7 @@ class KeywordExtractor(BaseService):
                 if not isinstance(result["reasoning"], str):
                     raise ValueError("'reasoning' key is not a string")
             except Exception as e:
-                logging.log(logging.ERROR, f"Error evaluating result: {e}")
+                logger.log(logging.ERROR, f"Error evaluating result: {e}")
                 continue
 
             for key, value in result.items():
@@ -80,10 +83,10 @@ class KeywordExtractor(BaseService):
                 if key == "main_objects":
                     final_result[key].extend(value)
 
-        logging.log(logging.INFO, f"Final result before fuzzy matching: {final_result}")
+        logger.log(logging.INFO, f"Final result before fuzzy matching: {final_result}")
 
         if len(final_result["main_objects"]) == 0:
-            logging.log(logging.ERROR, "No main objects detected")
+            logger.log(logging.ERROR, "No main objects detected")
             raise ValueError("No main objects detected")
 
         if len(results) > 1:
@@ -93,12 +96,12 @@ class KeywordExtractor(BaseService):
                 final_result["main_objects"]
             )
             if len(final_result_filtered["main_objects"]) == 0:
-                logging.log(logging.INFO, "No main objects detected")
-                logging.log(logging.INFO, "Fall back to the original result")
+                logger.log(logging.INFO, "No main objects detected")
+                logger.log(logging.INFO, "Fall back to the original result")
                 final_result_filtered["main_objects"] = final_result["main_objects"]
                 final_result["main_objects"] = final_result_filtered["main_objects"]
 
-        logging.log(logging.INFO, f"Final result: {final_result}")
+        logger.log(logging.INFO, f"Final result: {final_result}")
         return final_result
 
     def _get_frequent_matched_items(self, items, threshold=70, min_frequency=3):

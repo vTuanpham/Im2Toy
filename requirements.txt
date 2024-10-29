@@ -8,3 +8,5 @@ PyYAML
 python-multipart
 httpx
 fuzzywuzzy[speedup]
+aiofiles
+jinja2

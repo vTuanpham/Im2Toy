@@ -1,0 +1,88 @@
+{% extends "base.html" %} {% block content %}
+<div class="space-y-8">
+  <!-- Upload Section -->
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Upload Image</h2>
+    <div class="space-y-4">
+      <div class="custom-file-input">
+        <input type="file" id="fileInput" accept="image/*" class="hidden" />
+        <button
+          onclick="document.getElementById('fileInput').click()"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Choose File
+        </button>
+        <span id="fileName" class="ml-2 text-gray-600"></span>
+      </div>
+      <button
+        onclick="window.imageTransformer.uploadFile()"
+        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Transform Image
+      </button>
+    </div>
+  </div>
+
+  <!-- Camera Section -->
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Take Photo</h2>
+    <div class="space-y-4">
+      <div class="camera-container">
+        <video
+          id="video"
+          autoplay
+          playsinline
+          class="w-full max-w-2xl mx-auto hidden"
+        ></video>
+        <canvas id="canvas" class="hidden"></canvas>
+        <div class="camera-overlay">
+          <button
+            onclick="capturePhoto()"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Capture
+          </button>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          onclick="startCamera('user')"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Front Camera
+        </button>
+        <button
+          onclick="startCamera('environment')"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Back Camera
+        </button>
+        <button
+          onclick="stopCamera()"
+          class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Stop Camera
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div id="result" class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Result</h2>
+    <div class="space-y-4">
+      <img
+        id="resultImage"
+        class="result-image max-w-2xl mx-auto hidden rounded-lg"
+      />
+      <p id="description" class="text-gray-700 text-center"></p>
+      <p id="error" class="text-red-500 text-center"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-spinner"></div>
+</div>
+{% endblock %}

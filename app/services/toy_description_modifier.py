@@ -7,6 +7,9 @@ from .base_service import BaseService
 from ..core.prompt_manager import PromptManager, PromptSequenceItem
 
 
+logger = logging.getLogger("toy_transformer")
+
+
 class ToyDescriptionModifier(BaseService):
     def __init__(self, config: Dict, prompt_manager: PromptManager):
         super().__init__(
@@ -39,5 +42,5 @@ class ToyDescriptionModifier(BaseService):
 
     def process_results(self, results: List[str]) -> str:
         longest_toy_description = max(results, key=len)
-        logging.log(logging.INFO, f"Longest toy description: {longest_toy_description}")
+        logger.log(logging.INFO, f"Longest toy description: {longest_toy_description}")
         return longest_toy_description

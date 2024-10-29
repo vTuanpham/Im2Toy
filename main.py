@@ -1,8 +1,9 @@
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import ConfigHandler
-from app.api.routes import router
+from app.api.routes import ImageTransformRouter
 
 # Initialize configuration
 config = ConfigHandler()
@@ -11,16 +12,32 @@ app = FastAPI(**config.get_api_config())
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Adjust this in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Mount static files directory for client-side assets
+app.mount(
+    "/static",
+    StaticFiles(directory=Path(__file__).parent / "app" / "static"),
+    name="static",
+)
+
+# Mount templates directory for HTML templates
+app.mount(
+    "/templates",
+    StaticFiles(directory=Path(__file__).parent / "app" / "templates"),
+    name="templates",
+)
+
 # Include routes from routes.py
-app.include_router(router)
+image_transform = ImageTransformRouter()
+app.include_router(image_transform.router)
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(f"{Path(__file__).stem}:app", host="0.0.0.0", port=8000, reload=True)
+

@@ -1,8 +1,19 @@
 import logging
+from typing import Union
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 
 
-def setup_logging(log_path: Path = None) -> logging.Logger:
+# Set up Vietnam timezone (UTC+7)
+VN_TZ = timezone(timedelta(hours=7))
+
+
+def vn_time():
+    """Return current time in Vietnam timezone."""
+    return datetime.now(VN_TZ).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def setup_logging(log_path: Union[Path, None] = None) -> logging.Logger:
     if log_path is None:
         log_path = Path("logs/toy_transformer.log")
 
@@ -14,6 +25,7 @@ def setup_logging(log_path: Path = None) -> logging.Logger:
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
+    formatter.converter = lambda *args: datetime.now(VN_TZ).timetuple()
 
     file_handler = logging.FileHandler(log_path)
     file_handler.setFormatter(formatter)
