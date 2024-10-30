@@ -1,3 +1,13 @@
+logs/*
+!logs/
+
+outputs/*
+!outputs/
+
+uploads/*
+!upload/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

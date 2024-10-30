@@ -1,0 +1,8 @@
+logs/*
+!logs/
+
+outputs/*
+!outputs/
+
+uploads/*
+!upload/
