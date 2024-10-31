@@ -5,6 +5,9 @@ from typing import Dict, Any, List, Union
 from ..core.prompt_manager import PromptManager
 
 
+logger = logging.getLogger("toy_transformer")
+
+
 class BaseService(ABC):
     def __init__(
         self,
@@ -25,7 +28,7 @@ class BaseService(ABC):
         self.completed_tasks = 0
         self.semaphore = asyncio.Semaphore(max_concurrency)
 
-        logging.log(
+        logger.log(
             logging.INFO, f"BaseService initialized with prompt type: {prompt_type}"
         )
 
@@ -38,7 +41,7 @@ class BaseService(ABC):
         Retrieves a prompt sequence for the given prompt type, excluding specified keys.
         """
 
-        logging.log(logging.INFO, f"Getting prompt sequence: {prompt_type}")
+        logger.log(logging.DEBUG, f"Getting prompt sequence: {prompt_type}")
 
         if prompt_type:
             return self.prompt_manager.get_prompt_sequence(prompt_type, exclude_keys)
@@ -49,7 +52,7 @@ class BaseService(ABC):
         Retrieves a specific prompt key for the given prompt type.
         """
 
-        logging.log(logging.INFO, f"Getting prompt key: {prompt_key}")
+        logger.log(logging.DEBUG, f"Getting prompt key: {prompt_key}")
 
         if prompt_type:
             return self.prompt_manager.get_prompt_key(prompt_type, prompt_key)
@@ -74,7 +77,7 @@ class BaseService(ABC):
         Runs tasks in parallel with a concurrency and retry mechanism.
         """
 
-        logging.log(
+        logger.log(
             logging.INFO,
             f"Processing {self.max_total_tasks} tasks in {self.prompt_type}",
         )
@@ -86,7 +89,7 @@ class BaseService(ABC):
             ):
                 return None
 
-            logging.log(
+            logger.log(
                 logging.INFO, f"Processing task with args {args}, kwargs {kwargs}"
             )
 
@@ -114,11 +117,11 @@ class BaseService(ABC):
         # Filter out any None results from tasks that failed all retries
         results = [result for result in results if result is not None]
 
-        logging.log(logging.INFO, f"Completed {len(results)} tasks")
+        logger.log(logging.INFO, f"Completed {len(results)} tasks")
 
         self.completed_tasks = 0
-        logging.log(
-            logging.INFO, f"Setting completed tasks back to {self.completed_tasks}"
+        logger.log(
+            logging.DEBUG, f"Setting completed tasks back to {self.completed_tasks}"
         )
 
         return self.process_results(results)

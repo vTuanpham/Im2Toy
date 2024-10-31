@@ -6,14 +6,17 @@ from .base_service import BaseService
 from ..core.prompt_manager import PromptManager, PromptSequenceItem
 
 
+logger = logging.getLogger("toy_transformer")
+
+
 class DescriptionGenerator(BaseService):
     def __init__(self, config: Dict, prompt_manager: PromptManager):
         super().__init__(
             config,
             prompt_manager,
             prompt_type="image_descriptor",
-            max_concurrency=2,
-            max_total_tasks=2,
+            max_concurrency=4,
+            max_total_tasks=4,
         )
         self.model = genai.GenerativeModel(
             config["model_name"],
@@ -37,11 +40,14 @@ class DescriptionGenerator(BaseService):
             PromptSequenceItem("text", f"Main keyword of the image: {main_keyword}")
         )
 
-        response = self.model.generate_content(sequence.get_sequence())
+        response = self.model.generate_content(
+            sequence.get_sequence(),
+            generation_config=genai.GenerationConfig(temperature=0.95),
+        )
         return response.text
 
     def process_results(self, results: List[str]) -> str:
         longest_description = max(results, key=len)
-        logging.log(logging.INFO, f"Longest description: {longest_description}")
+        logger.log(logging.INFO, f"Longest description: {longest_description}")
 
         return longest_description

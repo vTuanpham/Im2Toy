@@ -7,6 +7,9 @@ from PIL import Image
 from ultralytics import YOLOWorld
 
 
+logger = logging.getLogger("toy_transformer")
+
+
 class ObjectDetectorResult(TypedDict):
     boxes_xywh: List[npt.NDArray]
     boxes_xyxy: List[npt.NDArray]
@@ -28,10 +31,10 @@ class ObjectDetector:
         self, image: Image.Image, classes: List[str]
     ) -> ObjectDetectorResult:
         self.model.set_classes(classes)
-        logging.log(logging.INFO, f"Setting classes: {classes}")
+        logger.log(logging.INFO, f"Setting classes: {classes}")
 
         results = self.model.predict(image)
-        logging.log(logging.INFO, f"Results: {results}")
+        logger.log(logging.DEBUG, f"Results: {results}")
 
         return self._process_results(results, input_classes=classes, image=image)
 
@@ -48,7 +51,7 @@ class ObjectDetector:
                 confs.append(box.conf.item())
 
         if not boxes_xywh:
-            logging.log(logging.INFO, "No objects detected")
+            logger.log(logging.ERROR, "No objects detected")
             return {
                 "boxes_xywh": [],
                 "boxes_xyxy": [],
@@ -59,13 +62,13 @@ class ObjectDetector:
             }
 
         normalized_combined_score = self._calculate_score(boxes_xywh, confs, image)
-        logging.log(
+        logger.log(
             logging.INFO, f"Normalized combined score: {normalized_combined_score}"
         )
 
         # Get the box with the highest combined score
         best_box_index = np.argmax(normalized_combined_score)
-        logging.log(logging.INFO, f"Best box index: {best_box_index}")
+        logger.log(logging.DEBUG, f"Best box index: {best_box_index}")
 
         # # Extract the box with the highest combined score
         highest_score_box_xywh = boxes_xywh[best_box_index]
@@ -74,8 +77,8 @@ class ObjectDetector:
         max_classes = input_classes[classes[best_box_index]]
         detected_classes = [input_classes[c] for c in classes]
 
-        logging.log(logging.INFO, f"Detected classes: {detected_classes}")
-        logging.log(logging.INFO, f"Main object detected: {max_classes}")
+        logger.log(logging.INFO, f"Detected classes: {detected_classes}")
+        logger.log(logging.INFO, f"Main object detected: {max_classes}")
 
         return {
             "boxes_xywh": boxes_xywh,

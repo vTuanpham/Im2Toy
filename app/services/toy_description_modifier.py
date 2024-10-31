@@ -7,14 +7,17 @@ from .base_service import BaseService
 from ..core.prompt_manager import PromptManager, PromptSequenceItem
 
 
+logger = logging.getLogger("toy_transformer")
+
+
 class ToyDescriptionModifier(BaseService):
     def __init__(self, config: Dict, prompt_manager: PromptManager):
         super().__init__(
             config,
             prompt_manager,
             prompt_type="toy_desc_modifier",
-            max_concurrency=2,
-            max_total_tasks=2,
+            max_concurrency=4,
+            max_total_tasks=4,
         )
         self.model = genai.GenerativeModel(
             config["model_name"],
@@ -38,6 +41,7 @@ class ToyDescriptionModifier(BaseService):
         return response.text
 
     def process_results(self, results: List[str]) -> str:
+        logger.log(logging.DEBUG, f"Processing results: {results}")
         longest_toy_description = max(results, key=len)
-        logging.log(logging.INFO, f"Longest toy description: {longest_toy_description}")
+        logger.log(logging.DEBUG, f"Longest toy description: {longest_toy_description}")
         return longest_toy_description

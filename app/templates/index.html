@@ -1,0 +1,90 @@
+{% extends "base.html" %} 
+{% block content %}
+<div class="space-y-8">
+  <!-- Upload Section -->
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Upload Image</h2>
+    <div class="flex items-center space-x-4">
+      <button
+        onclick="document.getElementById('fileInput').click()"
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+      >
+        Choose File
+      </button>
+      <input type="file" id="fileInput" accept="image/*" class="hidden" />
+      <span id="fileName" class="text-gray-600"></span>
+      <button
+        onclick="window.imageTransformer.uploadFile()"
+        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+      >
+        Transform Image
+      </button>
+      <img id="inputImage" class="input-image max-w-2xl mx-auto rounded-lg shadow-md transition-transform duration-300 hover:scale-105 hidden" />
+    </div>
+  </div>
+
+  <!-- Camera Section -->
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Take Photo</h2>
+    <div class="flex flex-col items-center space-y-4">
+      <div class="camera-container relative w-full max-w-2xl mx-auto">
+        <video id="video" autoplay playsinline class="w-full"></video>
+        <canvas id="canvas" class="hidden"></canvas>
+        <div class="camera-overlay absolute inset-0 flex justify-center items-center bg-black bg-opacity-30 opacity-0 transition-opacity duration-300">
+          <button
+            onclick="capturePhoto()"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+          >
+            Capture
+          </button>
+        </div>
+      </div>
+      <div class="flex space-x-4">
+        <button
+          onclick="startCamera('user')"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+        >
+          Front Camera
+        </button>
+        <button
+          onclick="startCamera('environment')"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+        >
+          Back Camera
+        </button>
+        <button
+          onclick="stopCamera()"
+          class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+        >
+          Stop Camera
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div id="result" class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Result</h2>
+    <div class="flex flex-col items-center space-y-4">
+      <img id="resultImage" class="result-image max-w-2xl mx-auto rounded-lg shadow-md transition-transform duration-300 hover:scale-105 hidden" />
+      <p id="toy_description" class="text-gray-700 text-center"></p>
+      <p id="description" class="text-gray-700 text-center"></p>
+      <p id="main_object" class="text-gray-700 text-center"></p>
+      <p id="detected_objects" class="text-gray-700 text-center"></p>
+      <p
+      <p id="error" class="text-red-500 text-center"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="success-checkmark" id="successCheckmark">✓</div>
+    <div class="loading-spinner" id="loadingSpinner"></div>
+    <div class="loading-text">Transforming your image...</div>
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="loading-phases" id="loadingPhase">Initializing...</div>
+</div>
+{% endblock %}

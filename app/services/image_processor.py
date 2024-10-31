@@ -15,12 +15,8 @@ from .description_generator import DescriptionGenerator
 from .image_generator import ImageGenerator
 from .toy_description_modifier import ToyDescriptionModifier
 
-# Set up logging with nice formatting
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO,
-)
+
+logger = logging.getLogger("toy_transformer")
 
 
 class ImageProcessor:
@@ -46,32 +42,45 @@ class ImageProcessor:
 
         self.image_generator = ImageGenerator(config.get_image_generation_config())
 
-        logging.log(logging.INFO, "ImageProcessor initialized")
+        self.max_output_storage = config.get_storage_config().get(
+            "max_output_storage", 30
+        )
+        self.output_dir = Path(config.get_storage_config()["output_dir"])
+
+        logger.log(logging.INFO, "ImageProcessor initialized")
 
     async def process_image(self, file: UploadFile) -> Dict[str, Any]:
-        logging.log(logging.INFO, "Processing image")
+        logger.log(logging.INFO, f"Processing image {file}")
 
         # Create temporary directory for processing
         with tempfile.TemporaryDirectory() as temp_dir:
+            logger.log(logging.DEBUG, f"Temporary directory created: {temp_dir}")
+
             # Save uploaded file
             temp_path = Path(temp_dir) / "input.jpg"
             with open(temp_path, "wb") as f:
                 f.write(await file.read())
 
+            fsize = os.path.getsize(temp_path)
+            if fsize == 0:
+                logger.log(logging.ERROR, f"Uploaded file {temp_path} is empty")
+                raise Exception("Uploaded file is empty")
+            logger.log(logging.DEBUG, f"File saved size: {fsize}")
+
             # Process image through pipeline
             try:
                 image = Image.open(temp_path)
-                logging.log(logging.INFO, f"Image loaded {image}")
+                logger.log(logging.INFO, f"Image loaded {image}")
             except Exception as e:
-                logging.log(logging.ERROR, f"Error loading image: {e}")
+                logger.log(logging.ERROR, f"Error loading image: {e}")
                 raise e
 
             # Extract keywords
             try:
                 keywords = await self.keyword_extractor(image)
-                logging.log(logging.INFO, f"Keywords extracted: {keywords}")
+                logger.log(logging.INFO, f"Keywords extracted: {keywords}")
             except Exception as e:
-                logging.log(logging.ERROR, f"Error extracting keywords: {e}")
+                logger.log(logging.ERROR, f"Error extracting keywords: {e}")
                 raise e
 
             try:
@@ -89,13 +98,13 @@ class ImageProcessor:
                     highest_score_box_xywh = detection_result["highest_score_box_xywh"]
                     highest_score_box_xyxy = detection_result["highest_score_box_xyxy"]
 
-                logging.log(logging.INFO, f"Object detected: {main_class}")
-                logging.log(logging.INFO, f"Classes detected: {classes_detected}")
-                logging.log(
-                    logging.INFO, f"Highest score box: {highest_score_box_xyxy}"
-                )
+                logger.log(logging.INFO, f"Object detected: {main_class}")
+                logger.log(logging.INFO, f"Classes detected: {classes_detected}")
+                logger.log(logging.INFO, f"Highest score box: {highest_score_box_xyxy}")
+                logger.log(logging.DEBUG, f"Boxes detected: {boxes_xyxy}")
+                logger.log(logging.DEBUG, f"Boxes detected: {boxes_xywh}")
             except Exception as e:
-                logging.log(logging.ERROR, f"Error detecting objects: {e}")
+                logger.log(logging.ERROR, f"Error detecting objects: {e}")
                 raise e
 
             try:
@@ -103,7 +112,8 @@ class ImageProcessor:
                 segmentation_result = self.segmentation.segment_object(
                     image, box_xyxy=highest_score_box_xyxy
                 )
-                logging.log(logging.INFO, f"Object segmented {segmentation_result}")
+                logger.log(logging.INFO, f"Object {image} segmented")
+                logger.log(logging.DEBUG, f"Object segmented {segmentation_result}")
 
                 if segmentation_result is None:
                     raise Exception("Error segmenting object")
@@ -116,17 +126,17 @@ class ImageProcessor:
 
                 # Save segmented image
                 seg_path = Path(temp_dir) / "segmented.png"
-                logging.log(logging.INFO, f"Saving segmented image: {seg_path}")
+                logger.log(logging.DEBUG, f"Saving segmented image: {seg_path}")
                 segmented_image.save(seg_path)
-                logging.log(logging.INFO, f"Segmented image saved: {seg_path}")
+                logger.log(logging.DEBUG, f"Segmented image saved: {seg_path}")
 
                 # Save box crop
                 box_crop_path = Path(temp_dir) / "box_crop.png"
-                logging.log(logging.INFO, f"Saving box crop: {box_crop_path}")
+                logger.log(logging.DEBUG, f"Saving box crop: {box_crop_path}")
                 segmented_image_box_crop.save(box_crop_path)
-                logging.log(logging.INFO, f"Box crop saved: {box_crop_path}")
+                logger.log(logging.DEBUG, f"Box crop saved: {box_crop_path}")
             except Exception as e:
-                logging.log(logging.ERROR, f"Error segmenting object: {e}")
+                logger.log(logging.ERROR, f"Error segmenting object: {e}")
                 raise e
 
             try:
@@ -136,35 +146,44 @@ class ImageProcessor:
                     detected_keywords=classes_detected,
                     main_keyword=main_class,
                 )
-                logging.log(logging.INFO, f"Description generated: {description}")
+                logger.log(logging.INFO, f"Description generated: {description}")
             except Exception as e:
-                logging.log(logging.ERROR, f"Error generating description: {e}")
+                logger.log(logging.ERROR, f"Error generating description: {e}")
                 raise e
 
             try:
                 # Modify description for toy
                 toy_description = await self.toy_description_modifier(
-                    Image.open(seg_path), description
+                    Image.open(temp_path), description
                 )
-                logging.log(
-                    logging.INFO, f"Modified toy description: {toy_description}"
-                )
+                logger.log(logging.INFO, f"Modified toy description: {toy_description}")
             except Exception as e:
-                logging.log(logging.ERROR, f"Error modifying description: {e}")
+                logger.log(logging.ERROR, f"Error modifying description: {e}")
                 raise e
 
+            # Check how many files are in the output directory and delete the oldest one if there are more than 30
+            files = list(self.output_dir.iterdir())
+            if len(files) > self.max_output_storage:
+                oldest_file = min(files, key=lambda p: p.stat().st_ctime)
+                logger.log(logging.INFO, f"Deleting oldest file: {oldest_file}")
+                oldest_file.unlink()
+
             # Generate final image
-            output_path = (
-                Path(self.config.get_storage_config()["output_dir"])
-                / f"{os.path.basename(file.filename).split('.')[0]}_toy.jpg"
-            )
+            # output_path = (
+            #     self.output_dir
+            #     / f"{os.path.basename(file.filename).split('.')[0]}_toy.jpg"
+            # )
+            output_path = self.output_dir / os.path.basename(file.filename)
             image_bytes, image_url = self.image_generator.generate_image(
                 toy_description, str(output_path)
             )
-            logging.log(logging.INFO, f"Image generated: {image_url}")
+            logger.log(logging.INFO, f"Image generated: {image_url}")
 
             return {
                 "image_url": image_url,
                 "description": description,
                 "image_bytes": image_bytes,
+                "toy_description": toy_description,
+                "main_object": main_class,
+                "detected_objects": classes_detected,
             }

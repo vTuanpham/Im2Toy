@@ -1,0 +1,45 @@
+<!-- gallery.html -->
+{% extends "base.html" %} {% block content %}
+<div class="gallery container mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4">Image Gallery</h1>
+  {% if gallery_items %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for item in gallery_items %}
+    <div class="flex space-x-4">
+      <div class="gallery-item">
+        <div class="item-container">
+          <div class="image-container">
+            <img
+              src="{{ url_for('get_image', file_path=item.upload_path) }}"
+              alt="Original"
+              class="gallery-image opacity-0"
+              loading="lazy"
+              onload="this.style.opacity=1"
+            />
+          </div>
+          <p class="text-sm text-gray-500 mt-1 font-bold">Original</p>
+        </div>
+      </div>
+      <div class="gallery-item">
+        <div class="item-container">
+          <div class="image-container">
+            <img
+              src="{{ url_for('get_image', file_path=item.output_path) }}"
+              alt="Transformed"
+              class="gallery-image opacity-0"
+              loading="lazy"
+              onload="this.style.opacity=1"
+            />
+          </div>
+          <p class="text-sm text-gray-500 mt-1 font-bold">Transformed</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-gray-600">No images found in the gallery.</p>
+  {% endif %}
+</div>
+
+{% endblock %}
