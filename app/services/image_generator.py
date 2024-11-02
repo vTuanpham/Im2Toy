@@ -11,7 +11,7 @@ class ImageGenerator:
         self.base_url = config["base_url"]
 
     def generate_image(self, description: str, output_path: str) -> Tuple[str, str]:
-        escaped_prompt = urllib.parse.quote(description, safe=":/%")
+        escaped_prompt = urllib.parse.quote_plus(description)
         url = f"{self.base_url}{escaped_prompt}"
 
         response = requests.get(url)

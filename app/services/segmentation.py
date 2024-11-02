@@ -38,7 +38,10 @@ class Segmentation:
     def _process_segmentation(
         self, image: npt.NDArray, binary_mask: npt.NDArray, box_xyxy: npt.NDArray
     ) -> SegmentationResult:
-        logger.log(logging.INFO, "Processing segmentation results")
+        logger.log(
+            logging.INFO,
+            f"Processing segmentation results, binary mask shape: {binary_mask.shape}, box shape: {box_xyxy.shape}, image shape: {image.shape}",
+        )
 
         logger.log(logging.DEBUG, f"Image shape: {image.shape}")
         logger.log(logging.DEBUG, f"Binary mask shape: {binary_mask.shape}")

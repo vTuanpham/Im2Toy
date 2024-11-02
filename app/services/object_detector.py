@@ -51,14 +51,43 @@ class ObjectDetector:
                 confs.append(box.conf.item())
 
         if not boxes_xywh:
-            logger.log(logging.ERROR, "No objects detected")
+            logger.log(logging.WARNING, "No objects detected. Creating fallback box.")
+
+            # Create a fallback box in the center of the image, 1/3 the size
+            image_width, image_height = image.size
+
+            # Calculate fallback box dimensions (1/3 of image size)
+            fallback_width = image_width / 3
+            fallback_height = image_height / 3
+
+            # Calculate box center coordinates
+            fallback_x = image_width / 2
+            fallback_y = image_height / 2
+
+            # Create fallback box in XYWH format
+            fallback_box_xywh = np.array(
+                [fallback_x, fallback_y, fallback_width, fallback_height]
+            )
+
+            # Convert to XYXY format
+            fallback_box_xyxy = np.array(
+                [
+                    fallback_x - fallback_width / 2,  # x1
+                    fallback_y - fallback_height / 2,  # y1
+                    fallback_x + fallback_width / 2,  # x2
+                    fallback_y + fallback_height / 2,  # y2
+                ]
+            )
+
+            logger.log(logging.INFO, f"Fallback box XYWH: {fallback_box_xywh}")
+
             return {
-                "boxes_xywh": [],
-                "boxes_xyxy": [],
+                "boxes_xywh": [fallback_box_xywh],
+                "boxes_xyxy": [fallback_box_xyxy],
                 "main_class": None,
                 "classes": [],
-                "highest_score_box_xywh": np.array([]),
-                "highest_score_box_xyxy": np.array([]),
+                "highest_score_box_xywh": fallback_box_xywh,
+                "highest_score_box_xyxy": fallback_box_xyxy,
             }
 
         normalized_combined_score = self._calculate_score(boxes_xywh, confs, image)
@@ -70,7 +99,7 @@ class ObjectDetector:
         best_box_index = np.argmax(normalized_combined_score)
         logger.log(logging.DEBUG, f"Best box index: {best_box_index}")
 
-        # # Extract the box with the highest combined score
+        # Extract the box with the highest combined score
         highest_score_box_xywh = boxes_xywh[best_box_index]
         highest_score_box_xyxy = boxes_xyxy[best_box_index]
 
