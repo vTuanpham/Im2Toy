@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 from pathlib import Path
 import tempfile
 from fastapi import UploadFile
@@ -49,6 +49,34 @@ class ImageProcessor:
 
         logger.log(logging.INFO, "ImageProcessor initialized")
 
+    @staticmethod
+    def remove_transparency(
+        img: Image.Image, bg_colour: Tuple[int, int, int] = (255, 255, 255)
+    ) -> Image.Image:
+        # Only process if image has transparency
+        if img.mode in ("RGBA", "LA") or (
+            img.mode == "P" and "transparency" in img.info
+        ):
+            logger.log(logging.INFO, f"Removing transparency from image {img}")
+
+            # Convert image to RGBA if in LA mode, to access alpha channel
+            img = img.convert("RGBA")
+            alpha = img.split()[-1]
+
+            # Create a new image with the specified background color and paste original on it
+            bg = Image.new("RGBA", img.size, bg_colour + (255,))
+            bg.paste(img, mask=alpha)
+
+            # Convert to RGB to discard the alpha channel completely
+            result = bg.convert("RGB")
+            logger.log(
+                logging.DEBUG,
+                f"Transparency removed and alpha channel discarded for image {img}",
+            )
+            return result
+        else:
+            return img
+
     async def process_image(self, file: UploadFile) -> Dict[str, Any]:
         logger.log(logging.INFO, f"Processing image {file}")
 
@@ -75,6 +103,8 @@ class ImageProcessor:
                 logger.log(logging.ERROR, f"Error loading image: {e}")
                 raise e
 
+            image = self.remove_transparency(image)
+
             # Extract keywords
             try:
                 keywords = await self.keyword_extractor(image)
@@ -88,13 +118,17 @@ class ImageProcessor:
                 detection_result = self.object_detector.detect_objects(
                     image, keywords["main_objects"]
                 )
-                if detection_result["main_class"] is None:
+                if (
+                    detection_result["main_class"] is None
+                    and detection_result["boxes_xyxy"] == []
+                ):
                     raise Exception("No main object detected")
                 else:
                     boxes_xywh = detection_result["boxes_xywh"]
                     boxes_xyxy = detection_result["boxes_xyxy"]
                     main_class = detection_result["main_class"]
                     classes_detected = detection_result["classes"]
+
                     highest_score_box_xywh = detection_result["highest_score_box_xywh"]
                     highest_score_box_xyxy = detection_result["highest_score_box_xyxy"]
 
@@ -140,6 +174,13 @@ class ImageProcessor:
                 raise e
 
             try:
+                if main_class is None:
+                    classes_detected = keywords["main_objects"]
+                    logger.log(
+                        logging.INFO,
+                        f"Main object not detected, fallback to LLM keywords: {classes_detected}",
+                    )
+
                 # Generate description
                 description = await self.description_generator(
                     Image.open(seg_path),
@@ -168,11 +209,6 @@ class ImageProcessor:
                 logger.log(logging.INFO, f"Deleting oldest file: {oldest_file}")
                 oldest_file.unlink()
 
-            # Generate final image
-            # output_path = (
-            #     self.output_dir
-            #     / f"{os.path.basename(file.filename).split('.')[0]}_toy.jpg"
-            # )
             output_path = self.output_dir / os.path.basename(file.filename)
             image_bytes, image_url = self.image_generator.generate_image(
                 toy_description, str(output_path)

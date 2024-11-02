@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Union
 import google.generativeai as genai
 from PIL import Image
 from .base_service import BaseService
@@ -24,7 +24,10 @@ class DescriptionGenerator(BaseService):
         )
 
     async def forward(
-        self, image: Image.Image, detected_keywords: List[str], main_keyword: str
+        self,
+        image: Image.Image,
+        detected_keywords: List[str],
+        main_keyword: Union[str, None],
     ) -> str:
         sequence = self._get_prompt_sequence(
             "image_descriptor", exclude_keys=["system_prompt"]
@@ -36,9 +39,10 @@ class DescriptionGenerator(BaseService):
                 f"Keywords: {detected_keywords[:min(4, len(detected_keywords))]}",
             )
         )
-        sequence.items.append(
-            PromptSequenceItem("text", f"Main keyword of the image: {main_keyword}")
-        )
+        if main_keyword:
+            sequence.items.append(
+                PromptSequenceItem("text", f"Main keyword of the image: {main_keyword}")
+            )
 
         response = self.model.generate_content(
             sequence.get_sequence(),

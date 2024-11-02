@@ -104,41 +104,46 @@ class KeywordExtractor(BaseService):
         logger.log(logging.INFO, f"Final result: {final_result}")
         return final_result
 
-    def _get_frequent_matched_items(self, items, threshold=50, min_frequency=2):
+    def _get_frequent_matched_items(self, items, threshold=50, min_frequency=1):
         """
         Returns a list of unique items that highly match with others in the original list,
-        filtering out items that appear infrequently.
-
-        Args:
-        - items (list): List of strings to filter for frequent, similar items.
-        - threshold (int): Minimum fuzzy match score to consider two items similar.
-        - min_frequency (int): Minimum number of times a group of similar items should appear to be retained.
-
-        Returns:
-        - List of unique, frequently-matched items.
+        filtering out items that appear infrequently and ensuring only one representative
+        item per similar group is retained.
         """
-        # Step 1: Group similar items
+        if not items:
+            return []
+
+        # First, group similar items
         clusters = []
         used_items = set()
 
         for item in items:
-            # Skip items that are already part of a cluster
             if item in used_items:
                 continue
 
-            # Find all items that match this item above the threshold
+            # Find similar items
             similar_items = [
                 i
                 for i in items
                 if i not in used_items and fuzz.ratio(item, i) >= threshold
             ]
 
-            # If similar items are found, create a cluster and mark items as used
+            # Only create a cluster if it meets minimum frequency
             if len(similar_items) >= min_frequency:
                 clusters.append(similar_items)
                 used_items.update(similar_items)
 
-        # Step 2: Select one representative item per cluster
-        unique_items = [max(cluster, key=Counter(items).get) for cluster in clusters]
+        # Select one representative item per cluster
+        unique_items = []
+        for cluster in clusters:
+            # Select most frequent item from the cluster
+            representative = max(cluster, key=Counter(items).get)
+
+            # Ensure no previously selected items are too similar to this one
+            if not any(
+                fuzz.ratio(representative, existing) >= threshold
+                for existing in unique_items
+            ):
+                unique_items.append(representative)
 
         return unique_items
